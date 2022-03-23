@@ -23,7 +23,7 @@ app.set('view engine', 'ejs');
 app.get('/', function(req, res) {
 
     // It shall not fetch and display any data in the index page
-    res.render('index', { weather: null, error: null });
+    res.render('index', { weather: null,ip_info: null, error: null });
 });
 
 // On a post request, the app shall data from OpenWeatherMap using the given arguments
@@ -41,7 +41,7 @@ app.post('/', function(req, res) {
 
         // On return, check the json data fetched
         if (err) {
-            res.render('index', { weather: null, error: 'Error, please try again' });
+            res.render('index', {ip_info: null, weather: null, error: 'Error, please try again - weather error' });
         } else {
             let weather = JSON.parse(body);
 
@@ -49,7 +49,7 @@ app.post('/', function(req, res) {
             console.log(weather);
 
             if (weather.main == undefined) {
-                res.render('index', { weather: null, error: 'Error, please try again' });
+                res.render('index', {ip_info: null, weather: null, error: 'Error, please try again  - weather undefined' });
             } else {
                 // we shall use the data got to set up our output
                 let place = `${weather.name}, ${weather.sys.country}`,
@@ -74,13 +74,48 @@ app.post('/', function(req, res) {
                 weatherFahrenheit = roundToTwo(weatherFahrenheit);
 
                 // We shall now render the data to our page (index.ejs) before displaying it out
-                res.render('index', { weather: weather, place: place, temp: weatherTemp, pressure: weatherPressure, icon: weatherIcon, description: weatherDescription, timezone: weatherTimezone, humidity: humidity, fahrenheit: weatherFahrenheit, clouds: clouds, visibility: visibility, main: main, error: null });
+                res.render('index', {ip_info:null, weather: weather, place: place, temp: weatherTemp, pressure: weatherPressure, icon: weatherIcon, description: weatherDescription, timezone: weatherTimezone, humidity: humidity, fahrenheit: weatherFahrenheit, clouds: clouds, visibility: visibility, main: main, error: null });
             }
         }
     });
 });
 
+
+app.post('/ip', function(req, res) {
+    let ip_address = req.body.ip_address;
+
+    let url = `https://ipinfo.io/${ip_address}/geo`;
+    request(url, function(err, response, body) {
+
+        if (err) {
+            res.render('index', { ip_info: null, weather: null, error: 'Error, please try again error' });
+        } else {
+            let ip_info = JSON.parse(body);
+
+            console.log(ip_info);
+            // console.log(response);
+
+            if (ip_info == undefined) {
+                res.render('index', {weather: null, ip_info: null, error: 'Error, please try again - undefined' });
+            } else {
+                // we shall use the data got to set up our output
+                let ip_add = `${ip_info.ip}`;
+                let city = `${ip_info.city}`;
+                let country = `${ip_info.country}`;
+                let region = `${ip_info.region}`;
+                let timezone = `${ip_info.timezone}`;
+                let org = `${ip_info.org}`;
+                let loc = `${ip_info.loc}`;
+
+                // We shall now render the data to our page (index.ejs) before displaying it out
+                res.render('index', {weather: null, ip_info: ip_info, ip_address: ip_add, city: city, country: country, region: region, timezone: timezone, org: org, loc: loc, error: null });
+            }
+        }
+
+    });
+});
+
 // We shall set up our port configurations
 app.listen(5000, function() {
-    console.log('Weather app listening on port 5000!');
+    console.log('Geo Location / Weather app listening on port 5000!');
 });
